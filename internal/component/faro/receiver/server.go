@@ -2,20 +2,17 @@ package receiver
 
 import (
 	"context"
-	"crypto/tls"
-	"errors"
 	"fmt"
-	"net"
+	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
-	"github.com/grafana/alloy/internal/runtime/logging/level"
-	"github.com/grafana/alloy/internal/util"
 	"github.com/grafana/dskit/instrument"
 	"github.com/grafana/dskit/middleware"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/grafana/alloy/internal/util"
 )
 
 type serverMetrics struct {
@@ -28,21 +25,30 @@ type serverMetrics struct {
 func newServerMetrics(reg prometheus.Registerer) *serverMetrics {
 	m := &serverMetrics{
 		requestDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name:    "faro_receiver_request_duration_seconds",
-			Help:    "Time (in seconds) spent serving HTTP requests.",
-			Buckets: instrument.DefBuckets,
+			Name:                            "faro_receiver_request_duration_seconds",
+			Help:                            "Time (in seconds) spent serving HTTP requests.",
+			Buckets:                         instrument.DefBuckets,
+			NativeHistogramBucketFactor:     1.1,
+			NativeHistogramMaxBucketNumber:  100,
+			NativeHistogramMinResetDuration: 1 * time.Hour,
 		}, []string{"method", "route", "status_code", "ws"}),
 
 		rxMessageSize: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name:    "faro_receiver_request_message_bytes",
-			Help:    "Size (in bytes) of messages received in the request.",
-			Buckets: middleware.BodySizeBuckets,
+			Name:                            "faro_receiver_request_message_bytes",
+			Help:                            "Size (in bytes) of messages received in the request.",
+			Buckets:                         middleware.BodySizeBuckets,
+			NativeHistogramBucketFactor:     1.1,
+			NativeHistogramMaxBucketNumber:  100,
+			NativeHistogramMinResetDuration: 1 * time.Hour,
 		}, []string{"method", "route"}),
 
 		txMessageSize: prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name:    "faro_receiver_response_message_bytes",
-			Help:    "Size (in bytes) of messages sent in response.",
-			Buckets: middleware.BodySizeBuckets,
+			Name:                            "faro_receiver_response_message_bytes",
+			Help:                            "Size (in bytes) of messages sent in response.",
+			Buckets:                         middleware.BodySizeBuckets,
+			NativeHistogramBucketFactor:     1.1,
+			NativeHistogramMaxBucketNumber:  100,
+			NativeHistogramMinResetDuration: 1 * time.Hour,
 		}, []string{"method", "route"}),
 
 		inflightRequests: prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -63,13 +69,13 @@ func newServerMetrics(reg prometheus.Registerer) *serverMetrics {
 // server is not dynamically updatable. To update server, shut down the old
 // server and start a new one.
 type server struct {
-	log     log.Logger
+	log     *slog.Logger
 	args    ServerArguments
 	handler http.Handler
 	metrics *serverMetrics
 }
 
-func newServer(l log.Logger, args ServerArguments, metrics *serverMetrics, h http.Handler) *server {
+func newServer(l *slog.Logger, args ServerArguments, metrics *serverMetrics, h http.Handler) *server {
 	return &server{
 		log:     l,
 		args:    args,
@@ -103,15 +109,11 @@ func (s *server) Run(ctx context.Context) error {
 		Addr:    fmt.Sprintf("%s:%d", s.args.Host, s.args.Port),
 		Handler: mw.Wrap(riHandler),
 	}
-	listener, err := s.listener(ctx, srv.Addr)
-	if err != nil {
-		return err
-	}
 
 	errCh := make(chan error, 1)
 	go func() {
-		level.Info(s.log).Log("msg", "starting server", "addr", srv.Addr)
-		errCh <- srv.Serve(listener)
+		s.log.Info("starting server", "addr", srv.Addr)
+		errCh <- srv.ListenAndServe()
 	}()
 
 	select {
@@ -119,36 +121,15 @@ func (s *server) Run(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		level.Info(s.log).Log("msg", "terminating server")
+		s.log.Info("terminating server")
 
 		if err := srv.Shutdown(ctx); err != nil {
-			level.Error(s.log).Log("msg", "failed to gracefully terminate server", "err", err)
+			s.log.Error("failed to gracefully terminate server", "err", err)
 		}
 
 	case err := <-errCh:
-		if !errors.Is(err, http.ErrServerClosed) {
-			return err
-		}
+		return err
 	}
 
 	return nil
-}
-
-func (s *server) listener(ctx context.Context, addr string) (net.Listener, error) {
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return nil, err
-	}
-
-	if s.args.TLS != nil {
-		tlsArgs := s.args.TLS.Convert()
-		tlsConfig, err := tlsArgs.Get().LoadTLSConfig(ctx)
-		if err != nil {
-			_ = listener.Close()
-			return nil, err
-		}
-		listener = tls.NewListener(listener, tlsConfig)
-	}
-
-	return listener, nil
 }

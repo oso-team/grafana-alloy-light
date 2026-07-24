@@ -1,18 +1,8 @@
 package receiver
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/tls"
-	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/pem"
 	"fmt"
-	"math/big"
-	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -151,93 +141,6 @@ func Test(t *testing.T) {
 			require.Equal(t, tc.expect, lr.entries[0])
 		})
 	}
-}
-
-func TestTLS(t *testing.T) {
-	ctx := componenttest.TestContext(t)
-
-	ctrl, err := componenttest.NewControllerFromID(
-		util.TestLogger(t),
-		"faro.receiver",
-	)
-	require.NoError(t, err)
-
-	freePort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-	certFile, keyFile, certPool := createTestTLSFiles(t)
-
-	go func() {
-		err := ctrl.Run(ctx, Arguments{
-			Server: ServerArguments{
-				Host: "127.0.0.1",
-				Port: freePort,
-				TLS: &otelcol.TLSServerArguments{
-					TLSSetting: otelcol.TLSSetting{
-						CertFile: certFile,
-						KeyFile:  keyFile,
-					},
-				},
-			},
-			Output: OutputArguments{},
-		})
-		require.NoError(t, err)
-	}()
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{RootCAs: certPool},
-		},
-	}
-
-	util.Eventually(t, func(t require.TestingT) {
-		resp, err := client.Get(fmt.Sprintf("https://localhost:%d/-/ready", freePort))
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		require.Equal(t, http.StatusOK, resp.StatusCode)
-	})
-}
-
-func createTestTLSFiles(t *testing.T) (string, string, *x509.CertPool) {
-	t.Helper()
-
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-	require.NoError(t, err)
-
-	certTemplate := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			CommonName: "localhost",
-		},
-		NotBefore:             time.Now().Add(-time.Hour),
-		NotAfter:              time.Now().Add(time.Hour),
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
-		DNSNames:              []string{"localhost"},
-		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1")},
-	}
-
-	certDER, err := x509.CreateCertificate(rand.Reader, &certTemplate, &certTemplate, &privateKey.PublicKey, privateKey)
-	require.NoError(t, err)
-
-	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
-	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
-
-	dir := t.TempDir()
-	certFile := filepath.Join(dir, "server.crt")
-	keyFile := filepath.Join(dir, "server.key")
-	require.NoError(t, os.WriteFile(certFile, certPEM, 0600))
-	require.NoError(t, os.WriteFile(keyFile, keyPEM, 0600))
-
-	certPool := x509.NewCertPool()
-	require.True(t, certPool.AppendCertsFromPEM(certPEM))
-
-	return certFile, keyFile, certPool
 }
 
 type fakeLogsReceiver struct {

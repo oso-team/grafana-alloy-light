@@ -1,18 +1,23 @@
 package flowcmd
 
 import (
-	"github.com/grafana/alloy"
-	"github.com/grafana/alloy/internal/alloycli"
-	"github.com/grafana/alloy/internal/build"
-	_ "github.com/grafana/alloy/internal/prometheus/discovery/install"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 
+	"github.com/grafana/alloy"
+	"github.com/grafana/alloy/internal/alloycli"
+	"github.com/grafana/alloy/internal/build"
+
 	// Register Prometheus SD components
+	_ "github.com/prometheus/prometheus/discovery/install"
+
 	_ "github.com/grafana/alloy/internal/loki/promtail/discovery/consulagent"
 
 	// Register integrations
 	_ "github.com/grafana/alloy/internal/static/integrations/install"
+
+	// Embed a set of fallback X.509 trusted roots
+	// Allows the app to work correctly even when the OS does not provide a verifier or systems roots pool
 
 	// Embed application manifest for Windows builds
 	_ "github.com/grafana/alloy/internal/winmanifest"
@@ -33,6 +38,10 @@ func RootCommand() *cobra.Command {
 	return alloycli.Command()
 }
 
-func RunCommand() *cobra.Command {
-	return alloycli.RunCommand()
+// RunAsExtensionCommand returns a standalone cobra command to run Alloy inside Otel collector.
+func RunAsExtensionCommand(modulePath string, configs map[string][]byte) *cobra.Command {
+	return alloycli.NewRunAsExtensionCommand(alloycli.ExtensionModeParams{
+		Configs:    configs,
+		ModulePath: modulePath,
+	})
 }

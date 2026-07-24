@@ -8,20 +8,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grafana/regexp"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
+	"github.com/stretchr/testify/require"
+
 	"github.com/grafana/alloy/internal/component"
 	"github.com/grafana/alloy/internal/component/common/loki"
 	fnet "github.com/grafana/alloy/internal/component/common/net"
 	alloy_relabel "github.com/grafana/alloy/internal/component/common/relabel"
 	"github.com/grafana/alloy/internal/component/loki/source"
-	"github.com/grafana/alloy/internal/util"
-	"github.com/grafana/regexp"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/model"
-	"github.com/stretchr/testify/require"
+	"github.com/grafana/alloy/internal/runtime/logging"
 )
 
 func TestPush(t *testing.T) {
-	opts := defaultOptions(t)
+	opts := defaultOptions()
 
 	ch1, ch2 := loki.NewLogsReceiver(), loki.NewLogsReceiver()
 	args := testArgsWith(t, func(args *Arguments) {
@@ -46,7 +47,7 @@ func TestPush(t *testing.T) {
 
 	// Check the received log entries
 	wantLabelSet := model.LabelSet{"foo": "bar", "host": "host", "app": "heroku", "proc": "router", "log_id": "-"}
-	wantLogLine := "at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=test-request-id fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n" // trufflehog:ignore
+	wantLogLine := "at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=59da6323-2bc4-4143-8677-cc66ccfb115f fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n" // trufflehog:ignore
 
 	for i := 0; i < 2; i++ {
 		select {
@@ -125,7 +126,7 @@ func TestUpdate_detectsWhenTargetRequiresARestart(t *testing.T) {
 			tc.mutateNewArgs(t, &newArgs)
 
 			comp, err := New(
-				defaultOptions(t),
+				defaultOptions(),
 				args,
 			)
 			require.NoError(t, err)
@@ -148,7 +149,7 @@ func TestUpdate_detectsWhenTargetRequiresARestart(t *testing.T) {
 	}
 }
 
-const testPayload = `249 <158>1 2022-06-13T14:52:23.622778+00:00 host heroku router - at=info method=GET path="/" host=cryptic-cliffs-27764.herokuapp.com request_id=test-request-id fwd="181.167.87.140" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https
+const testPayload = `270 <158>1 2022-06-13T14:52:23.622778+00:00 host heroku router - at=info method=GET path="/" host=cryptic-cliffs-27764.herokuapp.com request_id=59da6323-2bc4-4143-8677-cc66ccfb115f fwd="181.167.87.140" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https
 `
 
 var rulesExport = alloy_relabel.Rules{
@@ -182,9 +183,9 @@ var rulesExport = alloy_relabel.Rules{
 	},
 }
 
-func defaultOptions(t *testing.T) component.Options {
+func defaultOptions() component.Options {
 	return component.Options{
-		Logger:        util.TestAlloyLogger(t),
+		Logger:        logging.NewSlogNop(),
 		Registerer:    prometheus.NewRegistry(),
 		OnStateChange: func(e component.Exports) {},
 	}

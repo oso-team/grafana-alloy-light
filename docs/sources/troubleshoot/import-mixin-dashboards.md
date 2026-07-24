@@ -1,6 +1,6 @@
 ---
 canonical: https://grafana.com/docs/alloy/latest/troubleshoot/import-mixin-dashboards/
-description: Import rendered Grafana Alloy mixin dashboards
+description: Import rendered Grafana Alloy mixin dashboards 
 menuTitle: Import mixin dashboards
 title: Import rendered mixin dashboards
 weight: 250

@@ -2,9 +2,7 @@ package basic_test
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -26,67 +24,62 @@ import (
 )
 
 const (
-	actualUsername     = "foo"
-	htpasswdPath       = ".htpasswd"
-	htpasswdUser       = "user"
+	actualUsername       = "foo"
+	actualPassword       = "bar"
+	actualPasswordSHA512 = "$6$9CWNcoxP$2Xzv3wSu4TebVRfYxrl6d.8858Bz9gy1KoQUavTd/7sFaoitij4j/2dztwX7KYw3zMEfQaqEBFbvB9JK7Os0a/"
+
+	htpasswdPath     = ".htpasswd"
+	htpasswdUser     = "user"
+	htpasswdPassword = "password"
+
 	clientAuthUsername = "fizz"
+	clientAuthPassword = "buzz"
 )
 
-func deprecatedConfig(username, password string) string {
-	return fmt.Sprintf(`
+var (
+	cfg = fmt.Sprintf(`
 		username = "%s"
 		password = "%s"
-	`, username, password)
-}
-
-func deprecatedAndClientAuthConfig(username, password, clientUsername, clientPassword string) string {
-	// Set both here, so that the deprecated config can be used for server authentication.
-	return fmt.Sprintf(`
-		username = "%s"
-		password = "%s"
-		client_auth {
-			username = "%s"
-			password = "%s"
-		}
-	`, username, password, clientUsername, clientPassword)
-}
-
-func clientAuthConfig(username, password, clientUsername, clientPassword string) string {
-	return fmt.Sprintf(`
+	`, actualUsername, actualPassword)
+	// setting both here, so that the deprecated config can be used
+	// for server authentication
+	clientAuthCfg = fmt.Sprintf(`
 		username = "%s"
 		password = "%s"
 		client_auth {
 			username = "%s"
 			password = "%s"
 		}
-	`, username, password, clientUsername, clientPassword)
-}
+	`, clientAuthUsername, clientAuthPassword, clientAuthUsername, clientAuthPassword)
 
-func serverConfig(username, password string) string {
-	return fmt.Sprintf(`
+	cfgWithClientAuth = fmt.Sprintf(`
+		username = "%s"
+		password = "%s"
+		client_auth {
+			username = "%s"
+			password = "%s"
+		}
+	`, actualUsername, actualPasswordSHA512, clientAuthUsername, clientAuthPassword)
+
+	serverCfg = fmt.Sprintf(`
 		username = "%s"	
 		password = "%s"
-	`, username, password)
-}
-
-func htpasswdConfig(path string) string {
-	return fmt.Sprintf(`
+	`, actualUsername, actualPasswordSHA512)
+	htpasswdCfg = fmt.Sprintf(`
 		htpasswd {
 			file = "%s"
 		}
-	`, path)
-}
+	`, htpasswdPath)
 
-func configWithHtpasswd(username, password, path string) string {
-	return fmt.Sprintf(`
+	cfgWithHtpasswd = fmt.Sprintf(`
 		username = "%s"
 		password = "%s"
 		
 		htpasswd {
 			file = "%s"	
 		}
-	`, username, password, path)
-}
+	`, actualUsername, actualPasswordSHA512, htpasswdPath)
+)
 
 type basicAuthTests struct {
 	name     string
@@ -98,26 +91,22 @@ type basicAuthTests struct {
 // Test performs a basic integration test which runs the otelcol.auth.basic
 // component and ensures that it can be used for authentication.
 func TestClientAuth(t *testing.T) {
-	actualPassword := newTestCredential(t)
-	actualPasswordHash := createHtpasswdHash(t, actualPassword)
-	clientAuthPassword := newTestCredential(t)
-
 	tests := []basicAuthTests{
 		{
 			name:     "deprecated config",
-			config:   deprecatedConfig(actualUsername, actualPassword),
+			config:   cfg,
 			username: actualUsername,
 			password: actualPassword,
 		},
 		{
 			name:     "client auth config",
-			config:   deprecatedAndClientAuthConfig(clientAuthUsername, clientAuthPassword, clientAuthUsername, clientAuthPassword),
+			config:   clientAuthCfg,
 			username: clientAuthUsername,
 			password: clientAuthPassword,
 		},
 		{
 			name:     "combined config",
-			config:   clientAuthConfig(actualUsername, actualPasswordHash, clientAuthUsername, clientAuthPassword),
+			config:   cfgWithClientAuth,
 			username: clientAuthUsername,
 			password: clientAuthPassword,
 		},
@@ -174,7 +163,6 @@ func TestClientAuth(t *testing.T) {
 }
 
 func TestClientAuthWithCredentialFiles(t *testing.T) {
-	clientAuthPassword := newTestCredential(t)
 	usernameFile := createTempCredentialFile(t, "username", clientAuthUsername)
 	passwordFile := createTempCredentialFile(t, "password", clientAuthPassword)
 
@@ -186,7 +174,7 @@ func TestClientAuthWithCredentialFiles(t *testing.T) {
 			username_file = %q
 			password_file = %q
 		}
-	`, actualUsername, createHtpasswdHash(t, newTestCredential(t)), usernameFile, passwordFile)
+	`, actualUsername, actualPasswordSHA512, usernameFile, passwordFile)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
@@ -228,26 +216,22 @@ func TestClientAuthWithCredentialFiles(t *testing.T) {
 // TestServerAuth verifies the server auth component starts up properly and we can
 // authenticate with the provided credentials.
 func TestServerAuth(t *testing.T) {
-	actualPassword := newTestCredential(t)
-	actualPasswordHash := createHtpasswdHash(t, actualPassword)
-	htpasswdPassword := newTestCredential(t)
-
 	tests := []basicAuthTests{
 		{
 			name:     "deprecated config",
-			config:   serverConfig(actualUsername, actualPasswordHash),
+			config:   serverCfg,
 			username: actualUsername,
 			password: actualPassword,
 		},
 		{
 			name:     "htpasswd config",
-			config:   htpasswdConfig(htpasswdPath),
+			config:   htpasswdCfg,
 			username: htpasswdUser,
 			password: htpasswdPassword,
 		},
 		{
 			name:     "combined config",
-			config:   configWithHtpasswd(actualUsername, actualPasswordHash, htpasswdPath),
+			config:   cfgWithHtpasswd,
 			username: htpasswdUser,
 			password: htpasswdPassword,
 		},
@@ -298,7 +282,10 @@ func TestServerAuth(t *testing.T) {
 func createTestHtpasswdFile(t *testing.T, path, username, password string) {
 	t.Helper()
 
-	content := fmt.Sprintf("%s:%s\n", username, createHtpasswdHash(t, password))
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	require.NoError(t, err)
+
+	content := fmt.Sprintf("%s:%s\n", username, string(hash))
 
 	// create file
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -308,25 +295,6 @@ func createTestHtpasswdFile(t *testing.T, path, username, password string) {
 	// Write the entry to the file
 	_, err = f.WriteString(content)
 	require.NoError(t, err)
-}
-
-func createHtpasswdHash(t *testing.T, password string) string {
-	t.Helper()
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	require.NoError(t, err)
-
-	return string(hash)
-}
-
-func newTestCredential(t *testing.T) string {
-	t.Helper()
-
-	data := make([]byte, 16)
-	_, err := rand.Read(data)
-	require.NoError(t, err)
-
-	return hex.EncodeToString(data)
 }
 
 func deleteTestHtpasswdFile(t *testing.T, path string) {

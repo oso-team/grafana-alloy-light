@@ -2,7 +2,7 @@
 package all
 
 import (
-	_ "github.com/grafana/alloy/internal/component/discovery/aws"                            // Import discovery.aws.ec2 and discovery.aws.lightsail
+	_ "github.com/grafana/alloy/internal/component/discovery/aws"                            // Import discovery.aws, discovery.ec2, and discovery.lightsail
 	_ "github.com/grafana/alloy/internal/component/discovery/azure"                          // Import discovery.azure
 	_ "github.com/grafana/alloy/internal/component/discovery/consul"                         // Import discovery.consul
 	_ "github.com/grafana/alloy/internal/component/discovery/consulagent"                    // Import discovery.consulagent
@@ -66,6 +66,7 @@ import (
 	_ "github.com/grafana/alloy/internal/component/otelcol/connector/count"                  // Import otelcol.connector.count
 	_ "github.com/grafana/alloy/internal/component/otelcol/connector/host_info"              // Import otelcol.connector.host_info
 	_ "github.com/grafana/alloy/internal/component/otelcol/connector/servicegraph"           // Import otelcol.connector.servicegraph
+	_ "github.com/grafana/alloy/internal/component/otelcol/connector/signaltometrics"        // Import otelcol.connector.signaltometrics
 	_ "github.com/grafana/alloy/internal/component/otelcol/connector/spanlogs"               // Import otelcol.connector.spanlogs
 	_ "github.com/grafana/alloy/internal/component/otelcol/connector/spanmetrics"            // Import otelcol.connector.spanmetrics
 	_ "github.com/grafana/alloy/internal/component/otelcol/exporter/awss3"                   // Import otelcol.exporter.awss3exporter
@@ -112,9 +113,11 @@ import (
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/jaeger"                  // Import otelcol.receiver.jaeger
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/kafka"                   // Import otelcol.receiver.kafka
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/loki"                    // Import otelcol.receiver.loki
+	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/nginx"                   // Import otelcol.receiver.nginx
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/otlp"                    // Import otelcol.receiver.otlp
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/prometheus"              // Import otelcol.receiver.prometheus
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/solace"                  // Import otelcol.receiver.solace
+	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/splunkhec"               // Import otelcol.receiver.splunkhec
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/syslog"                  // Import otelcol.receiver.syslog
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/tcplog"                  // Import otelcol.receiver.tcplog
 	_ "github.com/grafana/alloy/internal/component/otelcol/receiver/vcenter"                 // Import otelcol.receiver.vcenter

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-kit/log"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -21,8 +20,8 @@ import (
 )
 
 const (
-	routerPayload         = "249 <158>1 2022-06-13T14:52:23.622778+00:00 host heroku router - at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=test-request-id fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n" // trufflehog:ignore
-	expectedRouterLogLine = "at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=test-request-id fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n"                                                                  // trufflehog:ignore
+	routerPayload         = "270 <158>1 2022-06-13T14:52:23.622778+00:00 host heroku router - at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=59da6323-2bc4-4143-8677-cc66ccfb115f fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n" // trufflehog:ignore
+	expectedRouterLogLine = "at=info method=GET path=\"/\" host=cryptic-cliffs-27764.herokuapp.com request_id=59da6323-2bc4-4143-8677-cc66ccfb115f fwd=\"181.167.87.140\" dyno=web.1 connect=0ms service=3ms status=200 bytes=6979 protocol=https\n"                                                                  // trufflehog:ignore
 
 	appPayload         = "140 <190>1 2022-06-13T14:52:23.621815+00:00 host app web.1 - [GIN] 2022/06/13 - 14:52:23 | 200 |    1.428101ms |  181.167.87.140 | GET      \"/\"\n"
 	expectedAppLogLine = "[GIN] 2022/06/13 - 14:52:23 | 200 |    1.428101ms |  181.167.87.140 | GET      \"/\"\n"
@@ -147,7 +146,7 @@ func TestDrainRoute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			route := newDrainRoute(log.NewNopLogger(), newMetrics(prometheus.NewRegistry()))
+			route := newDrainRoute(newMetrics(prometheus.NewRegistry()))
 			req := newDrainRequest(t, tt.params, tt.body, tt.headers)
 
 			entries, status, err := route.Logs(req, tt.cfg)

@@ -62,8 +62,6 @@ You can use the following blocks with `faro.receiver`:
 | [`output`][output]                           | Configures where to send collected telemetry data.   | yes      |
 | [`server`][server]                           | Configures the HTTP server.                          | no       |
 | `server` >  [`rate_limiting`][rate_limiting] | Configures rate limiting for the HTTP server.        | no       |
-| `server` >  [`tls`][tls]                     | Configures TLS for the HTTP server.                  | no       |
-| `server` >  `tls` > [`tpm`][tpm]             | Configures TPM settings for the TLS `key_file`.      | no       |
 | [`sourcemaps`][sourcemaps]                   | Configures sourcemap retrieval.                      | no       |
 | `sourcemaps` > [`cache`][cache]              | Configures sourcemap caching behavior.               | no       |
 | `sourcemaps` >  [`location`][location]       | Configures the location for sourcemap retrieval.     | no       |
@@ -74,8 +72,6 @@ You can use the following blocks with `faro.receiver`:
 [rate_limiting]: #rate_limiting
 [server]: #server
 [sourcemaps]: #sourcemaps
-[tls]: #tls
-[tpm]: #tpm
 
 {{< /docs/alloy-config >}}
 
@@ -112,24 +108,14 @@ The default value, `[]`, disables CORS support.
 To support requests from all origins, set `cors_allowed_origins` to `["*"]`.
 The `*` character indicates a wildcard.
 
-You can use the following headers for cross-domain requests: `Content-Type`, `Traceparent`, `X-API-Key`, `X-Faro-Session-Id`, or `X-Scope-OrgID`.
+You can use the following headers for cross-domain requests: `Content-Type`, `Content-Encoding`, `Traceparent`, `X-API-Key`, `X-Faro-Session-Id`, or `X-Scope-OrgID`.
+
+The server supports gzip-compressed request bodies.
+When a client sends a request with a `Content-Encoding: gzip` header, the server automatically decompresses the body before processing.
 
 When the `api_key` argument is non-empty, client requests must have an HTTP header called `X-API-Key` matching the value of the `api_key` argument.
 Requests that are missing the header or have the wrong value are rejected with an `HTTP 401 Unauthorized` status code.
 If the `api_key` argument is empty, no authentication checks are performed, and the `X-API-Key` HTTP header is ignored.
-
-#### `tls`
-
-The `tls` block configures TLS settings for the HTTP server.
-If the `tls` block isn't provided, TLS isn't used for connections to the server.
-
-{{< docs/shared lookup="reference/components/otelcol-tls-server-block.md" source="alloy" version="<ALLOY_VERSION>" >}}
-
-##### `tpm`
-
-The `tpm` block configures retrieving the TLS `key_file` from a trusted device.
-
-{{< docs/shared lookup="reference/components/otelcol-tls-tpm-block.md" source="alloy" version="<ALLOY_VERSION>" >}}
 
 #### `rate_limiting`
 
@@ -185,7 +171,7 @@ The `*` character indicates a wildcard.
 By default, sourcemap downloads are subject to a timeout of `"1s"`, specified by the `download_timeout` argument.
 Setting `download_timeout` to `"0s"` disables timeouts.
 
-To retrieve sourcemaps from disk or another network location, specify one or more [`location` blocks][location].
+To retrieve sourcemaps from disk or another network location, specify one or more [`location` blocks](#location).
 When `location` blocks are provided, they're checked first for sourcemaps before falling back to downloading.
 
 #### `cache`

@@ -32,22 +32,23 @@ import (
 
 // Config describes a job to scrape.
 type Config struct {
-	JobName                string                      `mapstructure:"job_name,omitempty" yaml:"job_name,omitempty"`
-	PipelineStages         stages.PipelineStages       `mapstructure:"pipeline_stages,omitempty" yaml:"pipeline_stages,omitempty"`
-	JournalConfig          *JournalTargetConfig        `mapstructure:"journal,omitempty" yaml:"journal,omitempty"`
-	SyslogConfig           *SyslogTargetConfig         `mapstructure:"syslog,omitempty" yaml:"syslog,omitempty"`
-	GcplogConfig           *GcplogTargetConfig         `mapstructure:"gcplog,omitempty" yaml:"gcplog,omitempty"`
-	PushConfig             *PushTargetConfig           `mapstructure:"loki_push_api,omitempty" yaml:"loki_push_api,omitempty"`
-	WindowsConfig          *WindowsEventsTargetConfig  `mapstructure:"windows_events,omitempty" yaml:"windows_events,omitempty"`
-	KafkaConfig            *KafkaTargetConfig          `mapstructure:"kafka,omitempty" yaml:"kafka,omitempty"`
-	AzureEventHubsConfig   *AzureEventHubsTargetConfig `mapstructure:"azure_event_hubs,omitempty" yaml:"azure_event_hubs,omitempty"`
-	GelfConfig             *GelfTargetConfig           `mapstructure:"gelf,omitempty" yaml:"gelf,omitempty"`
-	CloudflareConfig       *CloudflareConfig           `mapstructure:"cloudflare,omitempty" yaml:"cloudflare,omitempty"`
-	HerokuDrainConfig      *HerokuDrainTargetConfig    `mapstructure:"heroku_drain,omitempty" yaml:"heroku_drain,omitempty"`
-	RelabelConfigs         []*relabel.Config           `mapstructure:"relabel_configs,omitempty" yaml:"relabel_configs,omitempty"`
-	ServiceDiscoveryConfig ServiceDiscoveryConfig      `mapstructure:",squash" yaml:",inline"`
-	Encoding               string                      `mapstructure:"encoding,omitempty" yaml:"encoding,omitempty"`
-	DecompressionCfg       *DecompressionConfig        `yaml:"decompression,omitempty"`
+	JobName              string                      `mapstructure:"job_name,omitempty" yaml:"job_name,omitempty"`
+	PipelineStages       stages.PipelineStages       `mapstructure:"pipeline_stages,omitempty" yaml:"pipeline_stages,omitempty"`
+	JournalConfig        *JournalTargetConfig        `mapstructure:"journal,omitempty" yaml:"journal,omitempty"`
+	SyslogConfig         *SyslogTargetConfig         `mapstructure:"syslog,omitempty" yaml:"syslog,omitempty"`
+	GcplogConfig         *GcplogTargetConfig         `mapstructure:"gcplog,omitempty" yaml:"gcplog,omitempty"`
+	PushConfig           *PushTargetConfig           `mapstructure:"loki_push_api,omitempty" yaml:"loki_push_api,omitempty"`
+	WindowsConfig        *WindowsEventsTargetConfig  `mapstructure:"windows_events,omitempty" yaml:"windows_events,omitempty"`
+	KafkaConfig          *KafkaTargetConfig          `mapstructure:"kafka,omitempty" yaml:"kafka,omitempty"`
+	AzureEventHubsConfig *AzureEventHubsTargetConfig `mapstructure:"azure_event_hubs,omitempty" yaml:"azure_event_hubs,omitempty"`
+	GelfConfig           *GelfTargetConfig           `mapstructure:"gelf,omitempty" yaml:"gelf,omitempty"`
+	CloudflareConfig     *CloudflareConfig           `mapstructure:"cloudflare,omitempty" yaml:"cloudflare,omitempty"`
+	HerokuDrainConfig    *HerokuDrainTargetConfig    `mapstructure:"heroku_drain,omitempty" yaml:"heroku_drain,omitempty"`
+	RelabelConfigs       []*relabel.Config           `mapstructure:"relabel_configs,omitempty" yaml:"relabel_configs,omitempty"`
+	// List of Docker service discovery configurations.
+	ServiceDiscoveryConfig ServiceDiscoveryConfig `mapstructure:",squash" yaml:",inline"`
+	Encoding               string                 `mapstructure:"encoding,omitempty" yaml:"encoding,omitempty"`
+	DecompressionCfg       *DecompressionConfig   `yaml:"decompression,omitempty"`
 }
 
 type DecompressionConfig struct {
@@ -69,6 +70,7 @@ type ServiceDiscoveryConfig struct {
 	ConsulAgentSDConfigs []*consulagent.SDConfig `mapstructure:"consulagent_sd_configs,omitempty" yaml:"consulagent_sd_configs,omitempty"`
 	// List of DigitalOcean service discovery configurations.
 	DigitalOceanSDConfigs []*digitalocean.SDConfig `mapstructure:"digitalocean_sd_configs,omitempty" yaml:"digitalocean_sd_configs,omitempty"`
+	// List of Docker Swarm service discovery configurations.
 	// List of Serverset service discovery configurations.
 	ServersetSDConfigs []*zookeeper.ServersetSDConfig `mapstructure:"serverset_sd_configs,omitempty" yaml:"serverset_sd_configs,omitempty"`
 	// NerveSDConfigs is a list of Nerve service discovery configurations.
