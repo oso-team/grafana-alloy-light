@@ -9,7 +9,7 @@ import (
 	"github.com/grafana/alloy/internal/build"
 
 	// Register Prometheus SD components
-	_ "github.com/prometheus/prometheus/discovery/install"
+	_ "github.com/grafana/alloy/internal/prometheus/discovery/install"
 
 	_ "github.com/grafana/alloy/internal/loki/promtail/discovery/consulagent"
 
