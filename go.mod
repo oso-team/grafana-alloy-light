@@ -1,6 +1,6 @@
 module github.com/grafana/alloy
 
-go 1.26.5
+go 1.26.6
 
 // This local replace is required for local development and testing of the syntax submodule.
 // It is intentionally local to this module; shared remote replaces are synced from collector/builder-config.yaml.
@@ -44,7 +44,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/github/smimesign v0.2.0
 	github.com/githubexporter/github-exporter v1.3.1
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1
 	github.com/go-logfmt/logfmt v0.6.1
@@ -268,11 +268,11 @@ require (
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/sys v0.46.0
-	golang.org/x/text v0.38.0
+	golang.org/x/text v0.39.0
 	golang.org/x/time v0.15.0
 	golang.org/x/tools v0.47.0
 	google.golang.org/api v0.280.0
-	google.golang.org/grpc v1.81.1
+	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
