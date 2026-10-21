@@ -239,31 +239,31 @@ func mountRunFlags(r *alloyRun, fset *pflag.FlagSet) {
 }
 
 type alloyRun struct {
-	inMemoryAddr                 string
-	httpListenAddr               string
-	storagePath                  string
-	minStability                 featuregate.Stability
-	uiPrefix                     string
-	enablePprof                  bool
-	disableReporting             bool
-	clusterEnabled               bool
-	clusterNodeName              string
-	clusterAdvAddr               string
-	clusterJoinAddr              string
-	clusterDiscoverPeers         string
-	clusterAdvInterfaces         []string
-	clusterRejoinInterval        time.Duration
-	clusterMaxJoinPeers          int
-	clusterName                  string
-	clusterEnableTLS             bool
-	clusterTLSCAPath             string
-	clusterTLSCertPath           string
-	clusterTLSKeyPath            string
-	clusterTLSServerName         string
-	clusterWaitForSize           int
-	clusterWaitTimeout           time.Duration
-	disableSupportBundle         bool
-	windowsPriority              string
+	inMemoryAddr          string
+	httpListenAddr        string
+	storagePath           string
+	minStability          featuregate.Stability
+	uiPrefix              string
+	enablePprof           bool
+	disableReporting      bool
+	clusterEnabled        bool
+	clusterNodeName       string
+	clusterAdvAddr        string
+	clusterJoinAddr       string
+	clusterDiscoverPeers  string
+	clusterAdvInterfaces  []string
+	clusterRejoinInterval time.Duration
+	clusterMaxJoinPeers   int
+	clusterName           string
+	clusterEnableTLS      bool
+	clusterTLSCAPath      string
+	clusterTLSCertPath    string
+	clusterTLSKeyPath     string
+	clusterTLSServerName  string
+	clusterWaitForSize    int
+	clusterWaitTimeout    time.Duration
+	disableSupportBundle  bool
+	windowsPriority       string
 	// Feature flags
 	enableCommunityComps    bool
 	taskShutdownDeadline    time.Duration

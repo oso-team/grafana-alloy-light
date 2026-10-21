@@ -89,7 +89,7 @@ require (
 	github.com/jmespath-community/go-jmespath v1.1.1
 	github.com/jonboulle/clockwork v0.5.0
 	github.com/json-iterator/go v1.1.12
-	github.com/klauspost/compress v1.18.6 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/leodido/go-syslog/v4 v4.5.0
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/mackerelio/go-osstat v0.2.5
